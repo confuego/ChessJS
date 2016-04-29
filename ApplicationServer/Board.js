@@ -7,10 +7,14 @@ var PieceEnum = {
 	Pawn: 5
 };
 
+module.exports.PieceEnum = PieceEnum;
+
 var ColorEnum = {
 	Black: 0,
 	White: 1
 };
+
+module.exports.ColorEnum = ColorEnum;
 
 var PieceImgMap = {
 	"00": "&#9819;", // black king
@@ -26,6 +30,8 @@ var PieceImgMap = {
 	"50": "&#9823;", // pawn black
 	"51": "&#9817;", // pawn white
 };
+
+module.exports.PieceImgMap = PieceImgMap;
 
 function Piece(x,y,type,color,img) {
 	this.x = x;
@@ -47,6 +53,7 @@ Piece.prototype  = {
 
 Piece.prototype.constructor = Piece;
 
+module.exports.Piece = Piece;
 
 function Board() {
 	this.InitializeBoard();
@@ -101,4 +108,4 @@ Board.prototype = {
 
 Board.prototype.constructor = Board;
 
-var b = new Board();
+module.exports.Board = Board;
