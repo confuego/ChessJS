@@ -1,11 +1,13 @@
-function User(name,socket) {
+function User(name) {
 	this.Name = name;
-	this.socket = socket.id;
 }
 
 User.prototype = {
 	Name: undefined,
-	Socket: undefined,
+
+	serialize: function() {
+		return { Name: this.Name };
+	}
 };
 
 User.prototype.constructor = User;
