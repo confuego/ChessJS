@@ -20,23 +20,46 @@ function CreateBoard(div) {
 
 window.onload = function() {
 
-	var socket = io.connect("http://10.0.226.89:8080", {resource: "nodejs"});
-
-	document.getElementById("HandleButton").addEventListener("click", function() {
-
-		var user = document.getElementById("Handle").value;
-
-		if(user)
-			socket.emit("Create User", user); 
-	});
+	var socket = io.connect("http://10.0.226.89:8080", { resource: "nodejs" });
+	var CurrentRoom = null;
 
 	document.getElementById("CreateRoom").addEventListener("click", function() {
+		var CreateRoom = document.getElementById("CreateRoom");
+		CreateRoom.innerText = "";
+		var input = document.createElement("input");
 
-		socket.emit("Create Room",document.getElementById("CreateRoomName").value);
+		input.addEventListener("keydown", function(e) {
+			if(e.keyCode == 13) {
+				CurrentRoom = input.value;
+				socket.emit("Create Room", CurrentRoom);
+				input.blur();
+				ClearChildren(document.getElementById("ChatArea"));
+				AddChatMessage("Joined " + CurrentRoom, "[SERVER]");
+			}
+
+		});
+
+		input.addEventListener("blur", function() {
+			var room = document.getElementById("CreateRoom");
+			ClearChildren(room);
+			room.innerText = "Create A Room";
+		});
+
+		CreateRoom.appendChild(input);
+		input.focus();
 	});
 
-	document.getElementById("JoinRoom").addEventListener("click",function() {
-		socket.emit("Join Room",document.getElementById("JoinRoomName").value);
+	document.getElementById("UserName").addEventListener("keydown", function(e) {
+
+		if(e.keyCode == 13) {
+			var user = document.getElementById("UserName").value;
+
+			if(user) {
+				socket.emit("Create User", user);
+				document.getElementById("UserName").style.visibility = "hidden";
+				document.getElementById("CommunicationDiv").style.visibility = "visible";
+			}
+		}
 	});
 
 	function ClearChildren(Node) {
@@ -46,54 +69,60 @@ window.onload = function() {
 		}
 	}
 
-	function CreateGrid(Map,Node,Ignore) {
-		var table = document.createElement("table");
-		var keys  = Object.keys(Map);
-		var obj = Map[keys[0]];
+	socket.on("RefreshRooms", function(RoomMap) {
 
-		for(var attr in obj) {
-			if(Ignore.indexOf(attr) <= -1) {
-				var header = document.createElement("th");
-				header.innerText = attr;
-				table.appendChild(header);
-			}
+		var RoomList = document.getElementById("Rooms");
+		ClearChildren(RoomList);
+
+		for(var RoomName in RoomMap) {
+			var li = document.createElement("li");
+			li.innerText = RoomName;
+
+			li.addEventListener("click", function() {
+				CurrentRoom = this.innerText;
+				socket.emit("Join Room", CurrentRoom);
+				ClearChildren(document.getElementById("ChatArea"));
+				AddChatMessage("Joined " + CurrentRoom, "[SERVER]");
+			});
+
+			RoomList.appendChild(li);
 		}
 
-		for(var key in Map) {
+	});
 
-			var tr = document.createElement("tr");
-			var obj = Map[key];
-
-			for(var attr in obj) {
-				if(Ignore.indexOf(attr) <= -1) {
-
-					var td = document.createElement("td");
-					td.innerText = JSON.stringify(obj[attr]);
-
-					tr.appendChild(td);
-				}
-			}
-
-			table.appendChild(tr);
+	document.getElementById("TypeArea").addEventListener("keydown", function(e) {
+		if(e.keyCode == 13) {
+			var input = document.getElementById("TypeArea");
+			socket.emit("Send Message", { Message: input.value, Room: CurrentRoom });
+			input.value = null;
 		}
 
-		Node.appendChild(table);
+	});
+
+	function AddChatMessage(Msg,User) {
+		var messagelist = document.getElementById("ChatArea");
+		var li = document.createElement("li");
+
+		var span = document.createElement("span");
+		span.innerText = Msg;
+
+		var label = document.createElement("label");
+		label.innerText = User + ": ";
+
+		li.appendChild(label);
+		li.appendChild(span);
+		messagelist.appendChild(li);
 	}
 
-	socket.on("RefreshUsers", function(SocketMap) {
+	socket.on("Recieve Message", function(MsgStruct) {
 
-		var UserNode = document.getElementById("UserGrid");
-		ClearChildren(UserNode);
-		CreateGrid(SocketMap,UserNode,[]);
+		AddChatMessage(MsgStruct.Msg, MsgStruct.User);
 
 	});
 
-	socket.on("RefreshRooms", function(RoomMap) {
-		var RoomNode = document.getElementById("RoomGrid");
-		ClearChildren(RoomNode);
-		CreateGrid(RoomMap,RoomNode,["Board"]);
+	socket.on("User Joined", function(MsgStruct) {
+		AddChatMessage(MsgStruct.Msg, MsgStruct.User);
 	});
-
 };
 
 
