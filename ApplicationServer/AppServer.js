@@ -17,23 +17,27 @@ io.on("connection", function(socket) {
 		io.emit("RefreshRooms",set);
 	}
 
-	socket.on("disconnect", function() {
-		var user = SocketMap[this.id];
+	function RemoveUserFromRoom(user) {
 		for(var RoomName in RoomMap) {
 
 			var UserList = RoomMap[RoomName].Users;
-			var idx = UserList.indexOf(SocketMap[this.id]);
+			var idx = UserList.indexOf(user);
 
 			if(idx > -1) {
 				UserList.splice(idx,1);
+				socket.broadcast.emit("User Left", {User: "[SERVER]", Msg: user.Name + " has left."});
 				if(UserList.length == 0) {
-
 					delete RoomMap[RoomName];
-					RefreshRooms();
 				}
+				RefreshRooms();
 			}
 		}
+	}
 
+
+	socket.on("disconnect", function() {
+		var user = SocketMap[this.id];
+		RemoveUserFromRoom(user);
 		delete SocketMap[this.id];
 	});
 
@@ -41,13 +45,17 @@ io.on("connection", function(socket) {
 
 		if(!RoomMap[RoomName]) {
 			//console.log(SocketMap[this.id].Name + " is Creating Room " + RoomName + "\n");
+			var user = SocketMap[this.id];
+			RemoveUserFromRoom(user);
+
+
 			var r = new RoomNameSpace.Room(RoomName, SocketMap[this.id], new BoardNameSpace.Board());
 			RoomMap[RoomName] = r;
 			RefreshRooms();
 		}
 
 		else {
-			console.log(RoomName + " already exists!\n");
+			//console.log(RoomName + " already exists!\n");
 			return false;
 		}
 
@@ -65,8 +73,10 @@ io.on("connection", function(socket) {
 				return false;
 			}
 			else {
-				
-				RoomMap[RoomName].Users.push(SocketMap[socket.id]);
+				var user = SocketMap[socket.id];
+				RemoveUserFromRoom(user);
+
+				RoomMap[RoomName].Users.push(user);
 				var name = SocketMap[this.id].Name;
 				socket.broadcast.emit("User Joined", { Msg: name + " joined.", User: "[SERVER]" });
 				RefreshRooms();

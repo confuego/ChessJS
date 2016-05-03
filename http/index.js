@@ -123,6 +123,10 @@ window.onload = function() {
 	socket.on("User Joined", function(MsgStruct) {
 		AddChatMessage(MsgStruct.Msg, MsgStruct.User);
 	});
+
+	socket.on("User Left", function(MsgStruct) {
+		AddChatMessage(MsgStruct.Msg, MsgStruct.User);
+	});
 };
 
 
