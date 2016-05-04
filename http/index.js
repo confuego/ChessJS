@@ -29,12 +29,13 @@ window.onload = function() {
 		var input = document.createElement("input");
 
 		input.addEventListener("keydown", function(e) {
+
 			if(e.keyCode == 13) {
 				CurrentRoom = input.value;
 				socket.emit("Create Room", CurrentRoom);
 				input.blur();
 				ClearChildren(document.getElementById("ChatArea"));
-				AddChatMessage("Joined " + CurrentRoom, "[SERVER]");
+				AddChatMessage("Joined " + CurrentRoom, "[SERVER]: ", document.getElementById("ChatArea"));
 			}
 
 		});
@@ -60,6 +61,7 @@ window.onload = function() {
 				document.getElementById("CommunicationDiv").style.visibility = "visible";
 			}
 		}
+
 	});
 
 	function ClearChildren(Node) {
@@ -82,7 +84,7 @@ window.onload = function() {
 				CurrentRoom = this.innerText;
 				socket.emit("Join Room", CurrentRoom);
 				ClearChildren(document.getElementById("ChatArea"));
-				AddChatMessage("Joined " + CurrentRoom, "[SERVER]");
+				AddChatMessage("Joined " + CurrentRoom, "[SERVER]: ",document.getElementById("ChatArea"));
 			});
 
 			RoomList.appendChild(li);
@@ -97,17 +99,18 @@ window.onload = function() {
 			input.value = null;
 		}
 
+		socket.emit("Typing",CurrentRoom);
+
 	});
 
-	function AddChatMessage(Msg,User) {
-		var messagelist = document.getElementById("ChatArea");
+	function AddChatMessage(Msg,User,messagelist) {
 		var li = document.createElement("li");
 
 		var span = document.createElement("span");
 		span.innerText = Msg;
 
 		var label = document.createElement("label");
-		label.innerText = User + ": ";
+		label.innerText = User;
 
 		li.appendChild(label);
 		li.appendChild(span);
@@ -115,17 +118,23 @@ window.onload = function() {
 	}
 
 	socket.on("Recieve Message", function(MsgStruct) {
-
-		AddChatMessage(MsgStruct.Msg, MsgStruct.User);
-
+		AddChatMessage(MsgStruct.Msg, MsgStruct.User+ ": ",document.getElementById("ChatArea"));
+		
 	});
 
 	socket.on("User Joined", function(MsgStruct) {
-		AddChatMessage(MsgStruct.Msg, MsgStruct.User);
+		AddChatMessage(MsgStruct.Msg, MsgStruct.User+ ": ",document.getElementById("ChatArea"));
 	});
 
 	socket.on("User Left", function(MsgStruct) {
-		AddChatMessage(MsgStruct.Msg, MsgStruct.User);
+		AddChatMessage(MsgStruct.Msg, MsgStruct.User+ ": ",document.getElementById("ChatArea"));
+	});
+
+	socket.on("Display Typing", function(MsgStruct) {
+		var typing  =  document.getElementById("TypingArea");
+		if(typing.children.length < 5)
+			ClearChildren(typing);
+			AddChatMessage(MsgStruct.Msg, MsgStruct.User, typing);
 	});
 };
 

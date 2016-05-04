@@ -49,7 +49,7 @@
 				background-color: rgba(255, 255, 255, 0.75);
 			}
 
-			#CommunicationDiv > #ChatDiv > #ChatArea {
+			#CommunicationDiv > #ChatDiv > #ChatAreaDiv {
 				border: 1px solid;
 				border-radius: 5px;
 				margin-left: 10px;
@@ -83,13 +83,25 @@
 				background-color: rgba(255, 255, 255, 1);
 			}
 
-			#CommunicationDiv > #ChatDiv > #ChatArea > li {
+			#CommunicationDiv > #ChatDiv > #ChatAreaDiv > #ChatArea > li {
 				margin-left: -30px;
 			}
 
-			#CommunicationDiv > #ChatDiv > #ChatArea > li > label {
+			#CommunicationDiv > #ChatDiv > #ChatAreaDiv > #ChatArea > li > label {
 				color: blue;
 				font: bold;
+			}
+
+			#CommunicationDiv > #ChatDiv > #ChatAreaDiv > #TypingArea {
+				position: absolute;
+				top: 570;
+				width: 500px;
+			}
+
+			#CommunicationDiv > #ChatDiv > #ChatAreaDiv > #TypingArea > li {
+				text-align: center;
+				float: left;
+
 			}
 
 			#CommunicationDiv > #RoomDiv {
@@ -142,7 +154,7 @@
 				border: 1px solid;
 				border-radius: 5px;
 				width: 155px;
-				height: 40px;
+				height: 20px;
 				background-color: #DCDCDC;
 				text-align: center;
 				margin-top: 5px;
@@ -210,15 +222,16 @@
 
 		<div id="CommunicationDiv" style ="visibility: hidden;">
 			<div id = "ChatDiv">
-				<ul id="ChatArea">
-				</ul>
+				<div id="ChatAreaDiv">
+					<ul id = "ChatArea"></ul>
+					<ul id = "TypingArea"></ul>
+				</div>
 				<input id = "TypeArea"></input> 
 			</div>
 
 			<div id = "RoomDiv">
 				<div id = "CreateRoom">Create A Room</div>
-				<ul id = "Rooms">
-				</ul>
+				<ul id = "Rooms"></ul>
 			</div>
 
 		</div>

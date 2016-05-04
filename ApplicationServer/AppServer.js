@@ -20,13 +20,19 @@ io.on("connection", function(socket) {
 	function RemoveUserFromRoom(user) {
 		for(var RoomName in RoomMap) {
 
-			var UserList = RoomMap[RoomName].Users;
-			var idx = UserList.indexOf(user);
+			var Users = RoomMap[RoomName].Users;
+			var idx = Users.indexOf(user);
 
 			if(idx > -1) {
-				UserList.splice(idx,1);
-				socket.broadcast.emit("User Left", {User: "[SERVER]", Msg: user.Name + " has left."});
-				if(UserList.length == 0) {
+
+				Users.splice(idx,1);
+
+				for(var i = 0; i < Users.length; i++) {
+					var socket = io.sockets.connected[Users[i].Socket];
+					socket.emit("User Left", {User: "[SERVER]", Msg: user.Name + " has left."});
+				}
+
+				if(Users.length == 0) {
 					delete RoomMap[RoomName];
 				}
 				RefreshRooms();
@@ -43,7 +49,7 @@ io.on("connection", function(socket) {
 
 	socket.on("Create Room", function(RoomName) {
 
-		if(!RoomMap[RoomName]) {
+		if(!RoomMap[RoomName] && RoomName) {
 			//console.log(SocketMap[this.id].Name + " is Creating Room " + RoomName + "\n");
 			var user = SocketMap[this.id];
 			RemoveUserFromRoom(user);
@@ -115,15 +121,34 @@ io.on("connection", function(socket) {
 	});
 
 	socket.on("Send Message", function(MessageStruct) {
+		
 		var msg = MessageStruct.Message;
 		var room = MessageStruct.Room;
-		var Users = RoomMap[room].Users;
 
-		for(var i = 0; i < Users.length; i++) {
-			var socket = io.sockets.connected[Users[i].Socket];
-			socket.emit("Recieve Message", { Msg: msg, User: SocketMap[this.id].Name });
+		if(msg && room) {
+
+			var Users = RoomMap[room].Users;
+
+			for(var i = 0; i < Users.length; i++) {
+				var socket = io.sockets.connected[Users[i].Socket];
+				socket.emit("Recieve Message", { Msg: msg, User: SocketMap[this.id].Name });
+			}
 		}
 
+	});
+
+	socket.on("Typing", function(RoomName) {
+		if(RoomName) {
+			var Users = RoomMap[RoomName].Users;
+			for(var i = 0; i < Users.length; i++) {
+
+				if(Users[i].Socket != this.id) {
+					var socket = io.sockets.connected[Users[i].Socket];
+					socket.emit("Display Typing", { User: SocketMap[this.id].Name, Msg: " is typing..." });
+				}
+
+			}
+		}
 	});
 
 });
