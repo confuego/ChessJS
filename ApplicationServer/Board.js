@@ -53,7 +53,7 @@ Piece.prototype  = {
 
 Piece.prototype.constructor = Piece;
 
-module.exports.Piece = Piece;
+module.Piece = Piece;
 
 function Board() {
 	this.InitializeBoard();

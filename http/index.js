@@ -84,7 +84,6 @@ window.onload = function() {
 				CurrentRoom = this.innerText;
 				socket.emit("Join Room", CurrentRoom);
 				ClearChildren(document.getElementById("ChatArea"));
-				AddChatMessage("Joined " + CurrentRoom, "[SERVER]: ",document.getElementById("ChatArea"));
 			});
 
 			RoomList.appendChild(li);
@@ -98,8 +97,6 @@ window.onload = function() {
 			socket.emit("Send Message", { Message: input.value, Room: CurrentRoom });
 			input.value = null;
 		}
-
-		socket.emit("Typing",CurrentRoom);
 
 	});
 
@@ -119,22 +116,10 @@ window.onload = function() {
 
 	socket.on("Recieve Message", function(MsgStruct) {
 		AddChatMessage(MsgStruct.Msg, MsgStruct.User+ ": ",document.getElementById("ChatArea"));
+	});
+
+	socket.on("Initialize Board", function(BoardStruct) {
 		
-	});
-
-	socket.on("User Joined", function(MsgStruct) {
-		AddChatMessage(MsgStruct.Msg, MsgStruct.User+ ": ",document.getElementById("ChatArea"));
-	});
-
-	socket.on("User Left", function(MsgStruct) {
-		AddChatMessage(MsgStruct.Msg, MsgStruct.User+ ": ",document.getElementById("ChatArea"));
-	});
-
-	socket.on("Display Typing", function(MsgStruct) {
-		var typing  =  document.getElementById("TypingArea");
-		if(typing.children.length < 5)
-			ClearChildren(typing);
-			AddChatMessage(MsgStruct.Msg, MsgStruct.User, typing);
 	});
 };
 

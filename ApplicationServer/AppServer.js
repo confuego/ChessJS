@@ -4,6 +4,7 @@ var UserNameSpace = require("./User");
 var BoardNameSpace = require("./Board");
 var SocketMap = {};
 var RoomMap = {};
+var MAX_ROOMS = 10;
 
 io.on("connection", function(socket) {
 
@@ -17,6 +18,67 @@ io.on("connection", function(socket) {
 		io.emit("RefreshRooms",set);
 	}
 
+	function SendMessage(MessageStruct) {
+		var room = MessageStruct.Room;
+		var Socket = MessageStruct.Socket;
+		var events = MessageStruct.Events;
+
+		if(room) {
+
+			var Users = RoomMap[room].Users;
+			var ErrorMsg = "";
+
+			for(var i = 0; i < Users.length; i++) {
+
+				var socket = io.sockets.connected[Users[i].Socket];
+				
+				for(var j = 0; j < events.length; j++) {
+
+					var params = Object.keys(events[j].Data);
+
+					for(var k = 0; k < params.length; k++) {
+
+						var val = events[j].Data[params[k]];
+
+						if(typeof val == "function") {
+							var ret = val.call(this, Users[i]);
+							console.log(ret);
+							if(ret != undefined && ret != null && ret != "")
+								events[j].Data[params[k]] = ret;
+
+							else {
+
+								ErrorMsg += params[k] + " is not a valid input. ";
+								break;
+							}
+
+						}
+
+						else if(val == undefined || val == null || val == "") {
+
+							ErrorMsg += params[k] + " is not a valid input. ";
+							break;
+						}
+
+					}
+
+					if(ErrorMsg.length <= 0) {
+						socket.emit(events[j].EventType, events[j].Data);
+					}
+				}
+
+			}
+		}
+
+		if( !room ) {
+			ErrorMsg = "You are not in a room. ";
+		}
+
+		if(ErrorMsg.length > 0) {
+			Socket.emit("Recieve Message", { Msg: ErrorMsg, User: "[SERVER]" });
+		}
+	}
+
 	function RemoveUserFromRoom(user) {
 		for(var RoomName in RoomMap) {
 
@@ -26,10 +88,9 @@ io.on("connection", function(socket) {
 			if(idx > -1) {
 
 				Users.splice(idx,1);
-
 				for(var i = 0; i < Users.length; i++) {
 					var socket = io.sockets.connected[Users[i].Socket];
-					socket.emit("User Left", {User: "[SERVER]", Msg: user.Name + " has left."});
+					socket.emit("Recieve Message", { User: "[SERVER]", Msg: user.Name + " has left." });
 				}
 
 				if(Users.length == 0) {
@@ -44,13 +105,14 @@ io.on("connection", function(socket) {
 	socket.on("disconnect", function() {
 		var user = SocketMap[this.id];
 		RemoveUserFromRoom(user);
+		this.emit("Recieve Message", {User: "[SERVER]", Msg: "You have disconnected"});
 		delete SocketMap[this.id];
 	});
 
 	socket.on("Create Room", function(RoomName) {
+		var RoomNumber = Object.keys(RoomMap).length;
 
-		if(!RoomMap[RoomName] && RoomName) {
-			//console.log(SocketMap[this.id].Name + " is Creating Room " + RoomName + "\n");
+		if(!RoomMap[RoomName] && RoomName && RoomNumber < MAX_ROOMS) {
 			var user = SocketMap[this.id];
 			RemoveUserFromRoom(user);
 
@@ -60,95 +122,86 @@ io.on("connection", function(socket) {
 			RefreshRooms();
 		}
 
-		else {
-			//console.log(RoomName + " already exists!\n");
-			return false;
+		else if(RoomMap[RoomName]) {
+			this.emit("Recieve Message", { Msg: RoomName + " already exists", User: "[SERVER]" });
+		}
+
+		else if(!RoomName) {
+			this.emit("Recieve Message", { Msg: "Invalid Room Name", User: "[SERVER]" });
+		}
+
+		else if(RoomNumber >= MAX_ROOMS) {
+			this.emit("Recieve Message", { Msg: "Maximum number of rooms has been reached", User: "[SERVER]" });
 		}
 
 	});
 
 	socket.on("Join Room", function(RoomName) {
 		if(RoomMap[RoomName]) {
-			var UserList = RoomMap[RoomName].Users;
+			var Room = RoomMap[RoomName];
+			var Users = Room.Users;
 
-			var idx = UserList.indexOf(SocketMap[this.id]);
+			var idx = Users.indexOf(SocketMap[this.id]);
 
 			if(idx > -1) {
-
-				//console.log(SocketMap[this.id].Name + " is already in room " + RoomName + "!\n");
-				return false;
+				this.emit("Recieve Message", { Msg: "You are already in this room", User: "[SERVER]" });
+			}
+			else if(Users.length >= Room.MaxUsers) {
+				this.emit("Recieve Message", {Msg: "The room is currently full", User: "[SERVER]"});
 			}
 			else {
+
 				var user = SocketMap[socket.id];
 				RemoveUserFromRoom(user);
 
-				RoomMap[RoomName].Users.push(user);
 				var name = SocketMap[this.id].Name;
-				socket.broadcast.emit("User Joined", { Msg: name + " joined.", User: "[SERVER]" });
-				RefreshRooms();
+				this.emit("Recieve Message", { Msg: "Joined " + RoomName, User: "[SERVER]" });
+				SendMessage({ Socket: this, Room: RoomName, Events: [ { EventType: "Recieve Message", Data: { Msg: name + " has joined", User: "[SERVER]" } } ] });
 
-				return true;
+				Users.push(user);
+				if(Users.length == Room.MaxPlayers) {
+					Room.SetColors();
+					SendMessage({ Socket: this, Room: RoomName, Events: 
+																		[ 
+																			{ EventType: "Recieve Message", Data: { Msg: "Chess Game Started", User: "[SERVER]" } },
+																			{ EventType: "Initialize Board", Data: { Board: Room.Board, Color: function(User) { return User.Color; } } }
+																		] 
+								});
+				}
+				RefreshRooms();
 			}
 		}
 		else {
 			//console.log("Room " + RoomName + " does not exist!\n");
-			return false;
+			socket.emit("Recieve Message", { Msg: RoomName + " does not exist", User: "[SERVER]" });
 		}
 
-	});
-
-	socket.on("Request Board", function(RoomName) {
-
-		if(RoomMap[RoomName].Users.indexOf(SocketMap[this.id]) <= -1) {
-			//console.log("User does not exist in this room!\n");
-			return false;
-		}
-		else
-			return Room.Board;
 	});
 
 	socket.on("Create User", function(username) {
 		if(!SocketMap[this.id]) {
 
-			//console.log(username + " Connected!\n");
-			var u = new UserNameSpace.User(username,this.id);
+			var u = new UserNameSpace.User(username, this.id);
 			SocketMap[this.id] = u;
+			RefreshRooms();
 		}
 		else {
-			console.log("User already exists on this connection!\n");
+			socket.emit("Recieve Message", { Msg: "User already exists on this connection", User: "[SERVER]" });
 		}
 
 	});
 
 	socket.on("Send Message", function(MessageStruct) {
-		
-		var msg = MessageStruct.Message;
-		var room = MessageStruct.Room;
 
-		if(msg && room) {
-
-			var Users = RoomMap[room].Users;
-
-			for(var i = 0; i < Users.length; i++) {
-				var socket = io.sockets.connected[Users[i].Socket];
-				socket.emit("Recieve Message", { Msg: msg, User: SocketMap[this.id].Name });
-			}
-		}
-
+		SendMessage({
+						Socket: this, 
+						Room: MessageStruct.Room,
+						Events: [
+									{ EventType: "Recieve Message", Data: { Msg: MessageStruct.Message, User: SocketMap[this.id].Name } }
+								] 
+					});
 	});
 
-	socket.on("Typing", function(RoomName) {
-		if(RoomName) {
-			var Users = RoomMap[RoomName].Users;
-			for(var i = 0; i < Users.length; i++) {
 
-				if(Users[i].Socket != this.id) {
-					var socket = io.sockets.connected[Users[i].Socket];
-					socket.emit("Display Typing", { User: SocketMap[this.id].Name, Msg: " is typing..." });
-				}
-
-			}
-		}
-	});
 
 });
