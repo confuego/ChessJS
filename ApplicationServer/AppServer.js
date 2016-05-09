@@ -22,11 +22,11 @@ io.on("connection", function(socket) {
 		var room = MessageStruct.Room;
 		var Socket = MessageStruct.Socket;
 		var events = MessageStruct.Events;
+		var ErrorMsg = "";
 
 		if(room) {
 
 			var Users = RoomMap[room].Users;
-			var ErrorMsg = "";
 
 			for(var i = 0; i < Users.length; i++) {
 
@@ -34,37 +34,8 @@ io.on("connection", function(socket) {
 				
 				for(var j = 0; j < events.length; j++) {
 
-					var params = Object.keys(events[j].Data);
+					socket.emit(events[j].EventType, events[j].Data);
 
-					for(var k = 0; k < params.length; k++) {
-
-						var val = events[j].Data[params[k]];
-
-						if(typeof val == "function") {
-							var ret = val.call(this, Users[i]);
-							console.log(ret);
-							if(ret != undefined && ret != null && ret != "")
-								events[j].Data[params[k]] = ret;
-
-							else {
-
-								ErrorMsg += params[k] + " is not a valid input. ";
-								break;
-							}
-
-						}
-
-						else if(val == undefined || val == null || val == "") {
-
-							ErrorMsg += params[k] + " is not a valid input. ";
-							break;
-						}
-
-					}
-
-					if(ErrorMsg.length <= 0) {
-						socket.emit(events[j].EventType, events[j].Data);
-					}
 				}
 
 			}
@@ -147,11 +118,11 @@ io.on("connection", function(socket) {
 				this.emit("Recieve Message", { Msg: "You are already in this room", User: "[SERVER]" });
 			}
 			else if(Users.length >= Room.MaxUsers) {
-				this.emit("Recieve Message", {Msg: "The room is currently full", User: "[SERVER]"});
+				this.emit("Recieve Message", { Msg: "The room is currently full", User: "[SERVER]" });
 			}
 			else {
 
-				var user = SocketMap[socket.id];
+				var user = SocketMap[this.id];
 				RemoveUserFromRoom(user);
 
 				var name = SocketMap[this.id].Name;
@@ -160,19 +131,28 @@ io.on("connection", function(socket) {
 
 				Users.push(user);
 				if(Users.length == Room.MaxPlayers) {
+
 					Room.SetColors();
+
+					for(var i = 0; i < Users.length; i++) {
+
+						var socket = io.sockets.connected[Users[i].Socket];
+						var color  = (Users[i].Color == 0)? "Black." : "White.";
+
+						socket.emit("Recieve Color", { Msg: "You are " + color, User: "[SERVER]", Color: Users[i].Color, ColorEnum: BoardNameSpace.ColorEnum });
+					}
+
 					SendMessage({ Socket: this, Room: RoomName, Events: 
-																		[ 
-																			{ EventType: "Recieve Message", Data: { Msg: "Chess Game Started", User: "[SERVER]" } },
-																			{ EventType: "Initialize Board", Data: { Board: Room.Board, Color: function(User) { return User.Color; } } }
+																		[
+																			{ EventType: "Initialize Board", Data: { Msg: "Initializing Board ", User: "[SERVER]", Board: Room.Board, PieceEnum: BoardNameSpace.PieceEnum } } 
 																		] 
 								});
+
 				}
 				RefreshRooms();
 			}
 		}
 		else {
-			//console.log("Room " + RoomName + " does not exist!\n");
 			socket.emit("Recieve Message", { Msg: RoomName + " does not exist", User: "[SERVER]" });
 		}
 

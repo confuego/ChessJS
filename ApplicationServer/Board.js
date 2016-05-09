@@ -79,14 +79,14 @@ Board.prototype = {
 			else if(i == 1) {
 
 				for(var j = 0; j < row.length; j++) {
-					row[j] = new Piece(1,j,PieceEnum.Pawn,ColorEnum.Black);
+					row[j] = new Piece(1,j,PieceEnum.Pawn,ColorEnum.Black, PieceImgMap[PieceEnum.Pawn.toString() + ColorEnum.Black.toString()]);
 				}
 
 			}
 			else if(i == 6) {
 
 				for(var j = 0; j < row.length; j++) {
-					row[j] = new Piece(6,j,PieceEnum.Pawn,ColorEnum.White);
+					row[j] = new Piece(6,j,PieceEnum.Pawn,ColorEnum.White, PieceImgMap[PieceEnum.Pawn.toString() + ColorEnum.White.toString()]);
 				}
 
 			}

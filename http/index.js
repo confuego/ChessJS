@@ -1,28 +1,93 @@
 
 window.onload = function() {
 
-	function CreateBoard(div) {
+	var socket = io.connect("http://10.0.226.89:8080", { resource: "nodejs" });
+	var CurrentRoom = null;
+	var CurrentColor = null;
+	var ColorEnum = null;
+	var PieceEnum = null;
+
+	function CreateBoard(div, reverse) {
 		var table = document.createElement("table");
 		table.id = "chess_board";
 
-		for(var i = 0; i < 8; i++) {
+		if(reverse == true) {
 
-			var row = document.createElement("tr");
+			for(var i = 7; i >= 0; i--) {
 
-			for(var j = 0; j < 8; j++) {
-				var cell = document.createElement("td");
-				cell.id = i.toString() + "-" + j.toString();
-				row.appendChild(cell);
+				var row = document.createElement("tr");
+
+				for(var j = 7; j >= 0; j--) {
+					var cell = document.createElement("td");
+					cell.id = i.toString() + j.toString();
+					row.appendChild(cell);
+				}
+				table.appendChild(row);
+
 			}
-			table.appendChild(row);
+		}
+		else {
+
+			for(var i = 0; i < 8; i++) {
+
+				var row = document.createElement("tr");
+
+				for(var j = 0; j < 8; j++) {
+					var cell = document.createElement("td");
+					cell.id = i.toString() + j.toString();
+					row.appendChild(cell);
+				}
+				table.appendChild(row);
+
+			}
 
 		}
+
 
 		document.getElementById(div).appendChild(table);
 	}
 
-	var socket = io.connect("http://10.0.226.89:8080", { resource: "nodejs" });
-	var CurrentRoom = null;
+
+	function ClearChildren(Node) {
+
+		while (Node.firstChild) {
+		    Node.removeChild(Node.firstChild);
+		}
+	}
+
+	function AddChatMessage(Msg,User,messagelist) {
+		var li = document.createElement("li");
+
+		var span = document.createElement("span");
+		span.innerText = Msg;
+
+		var label = document.createElement("label");
+		label.innerText = User;
+
+		li.appendChild(label);
+		li.appendChild(span);
+		messagelist.appendChild(li);
+	}
+
+	function BindBoard(board) {
+		for(var i = 0; i < board.length; i++) {
+
+			for(var j = 0; j < board.length; j++) {
+
+				if(board[i][j]) {
+
+					var cell = document.getElementById(i.toString()+j.toString());
+					//console.log(cell);
+					var a = document.createElement("a");
+					//a.href = "#";
+					a.innerHTML = board[i][j].Img;
+					cell.appendChild(a);
+				}
+
+			}
+
+		}
+	}
 
 	document.getElementById("CreateRoom").addEventListener("click", function() {
 		var CreateRoom = document.getElementById("CreateRoom");
@@ -65,13 +130,6 @@ window.onload = function() {
 
 	});
 
-	function ClearChildren(Node) {
-
-		while (Node.firstChild) {
-		    Node.removeChild(Node.firstChild);
-		}
-	}
-
 	socket.on("RefreshRooms", function(RoomMap) {
 
 		var RoomList = document.getElementById("Rooms");
@@ -101,26 +159,32 @@ window.onload = function() {
 
 	});
 
-	function AddChatMessage(Msg,User,messagelist) {
-		var li = document.createElement("li");
-
-		var span = document.createElement("span");
-		span.innerText = Msg;
-
-		var label = document.createElement("label");
-		label.innerText = User;
-
-		li.appendChild(label);
-		li.appendChild(span);
-		messagelist.appendChild(li);
-	}
-
 	socket.on("Recieve Message", function(MsgStruct) {
-		AddChatMessage(MsgStruct.Msg, MsgStruct.User+ ": ",document.getElementById("ChatArea"));
+		AddChatMessage(MsgStruct.Msg, MsgStruct.User + ": ",document.getElementById("ChatArea"));
+	});
+
+	socket.on("Recieve Color", function(ColorStruct) {
+		// store color
+		CurrentColor = ColorStruct.Color;
+		ColorEnum = ColorStruct.ColorEnum;
+		AddChatMessage(ColorStruct.Msg, ColorStruct.User + ": ", document.getElementById("ChatArea"));
+
 	});
 
 	socket.on("Initialize Board", function(BoardStruct) {
-		CreateBoard("chess");
+		//check color
+		//bind board to screen and flip based on color.
+		PieceEnum = BoardStruct.PieceEnum;
+		AddChatMessage(BoardStruct.Msg, BoardStruct.User + ": ", document.getElementById("ChatArea"));
+		if(CurrentColor == ColorEnum.Black)
+			CreateBoard("chess",true);
+		else
+			CreateBoard("chess",false);
+
+		console.log(BoardStruct.Board);
+
+		BindBoard(BoardStruct.Board.board);
+
 	});
 };
 
