@@ -6,6 +6,12 @@ window.onload = function() {
 	var CurrentColor = null;
 	var ColorEnum = null;
 	var PieceEnum = null;
+	var prevX = null;
+	var prevY = null;
+	var currX = null;
+	var currY = null;
+
+	document.getElementById("UserName").focus();
 
 	function CreateBoard(div, reverse) {
 		var table = document.createElement("table");
@@ -74,15 +80,41 @@ window.onload = function() {
 
 			for(var j = 0; j < board.length; j++) {
 
-				if(board[i][j]) {
 
-					var cell = document.getElementById(i.toString()+j.toString());
-					//console.log(cell);
-					var a = document.createElement("a");
-					//a.href = "#";
+				var cell = document.getElementById(i.toString()+j.toString());
+				var a = document.createElement("a");
+
+				if(board[i][i]) 
 					a.innerHTML = board[i][j].Img;
-					cell.appendChild(a);
-				}
+
+				a.draggable = true;
+
+				a.addEventListener("dragstart", function(e) {
+
+					var coords = e.currentTarget.parentNode.id.split("");
+					prevX = coords[0];
+					prevY = coords[1];
+					//console.log(prevX + "-" + prevY);
+				}, false);
+
+				a.addEventListener("dragover",function(e) {
+					e.preventDefault();
+				}, false);
+
+				a.addEventListener("drop",function(e) {
+					
+					e.preventDefault();
+					var coords = e.toElement.parentNode.id.split("");
+
+					currX = coords[0];
+					currY = coords[1];
+					console.log("dropped");
+					console.log(prevX + "-" + prevY);
+					console.log(currX + "-" + prevY);
+
+				}, false);
+
+				cell.appendChild(a);
 
 			}
 
