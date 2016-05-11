@@ -102,15 +102,19 @@ window.onload = function() {
 				}, false);
 
 				a.addEventListener("drop",function(e) {
-					
+
 					e.preventDefault();
 					var coords = e.toElement.parentNode.id.split("");
 
 					currX = coords[0];
 					currY = coords[1];
-					console.log("dropped");
-					console.log(prevX + "-" + prevY);
-					console.log(currX + "-" + prevY);
+					// socket emit event to check board
+					// on return, call this logic if valid move
+					var from = document.getElementById(prevX.toString() + prevY.toString());
+					var piece = from.firstChild.innerHTML;
+					e.toElement.innerHTML = piece;
+					ClearChildren(from.firstChild);
+					
 
 				}, false);
 
