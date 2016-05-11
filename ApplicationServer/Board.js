@@ -57,10 +57,17 @@ module.Piece = Piece;
 
 function Board() {
 	this.InitializeBoard();
+	this.TurnColor = ColorEnum.White;
 }
 
 Board.prototype = {
 	board: undefined,
+	TurnColor: undefined,
+	Validate: function(prevX, prevY, currX, currY) {
+		var FromPiece = this.board[prevX][prevY];
+		var ToPiece = this.board[currX][currY];
+
+	},
 	InitializeBoard: function () {
 		this.board = new Array(8);
 		for(var i = 0; i < 8; i++) {

@@ -110,10 +110,11 @@ window.onload = function() {
 					currY = coords[1];
 					// socket emit event to check board
 					// on return, call this logic if valid move
-					var from = document.getElementById(prevX.toString() + prevY.toString());
-					var piece = from.firstChild.innerHTML;
-					e.toElement.innerHTML = piece;
-					ClearChildren(from.firstChild);
+					//var from = document.getElementById(prevX.toString() + prevY.toString());
+					//var piece = from.firstChild.innerHTML;
+					//e.toElement.innerHTML = piece;
+					//ClearChildren(from.firstChild);
+					socket.emit("Validate Move", { prevX: prevX, prevY: prevY, currX: currX, currY: currY, RoomName: CurrentRoom });
 					
 
 				}, false);

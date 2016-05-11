@@ -182,6 +182,26 @@ io.on("connection", function(socket) {
 					});
 	});
 
+	socket.on("Validate Move", function(Moves) {
+		var user = SocketMap[this.id];
+		var RoomName = Moves.RoomName;
+		var Room = RoomMap[RoomName];
+
+		if(Room.Users.indexOf(user) < -1) {
+			socket.emit("Recieve Message", { Msg: "User is not in this room", User: "[SERVER]" });
+		}
+		else if(Room.Board.board[Moves.prevX][Moves.prevY].Color != user.Color) {
+			socket.emit("Recieve Message", { Msg: "That is not your color", User: "[SERVER]" });
+		}
+		else if(Room.Board.TurnColor != user.Color) {
+			socket.emit("Recieve Message", { Msg: "It is not your turn", User: "[SERVER]" });
+		}
+		else {
+			Room.Board.Validate(Moves.prevX, Moves.prevY, Moves.currX, Moves.currY);
+		}
+
+	});
+
 
 
 });
