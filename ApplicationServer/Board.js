@@ -47,8 +47,52 @@ Piece.prototype  = {
 	y: undefined,
 	Type: undefined,
 	Color: undefined,
-	Moves: undefined,
-	Img: undefined
+	Img: undefined,
+	MoveSet: {
+		0: function(x, y, board) { // king
+
+			var moves = [];
+
+			if(x - 1 > -1)
+				moves.push({ x: x - 1, y: y });
+			if(x + 1 <= 7)
+				moves.push({ x: x + 1, y: y });
+			if(y + 1 <= 7)
+				moves.push({ x: x, y: y + 1 });
+			if(y - 1 > -1)
+				moves.push({ x: x, y: y - 1 });
+			if(y + 1 <= 7 && x + 1 <= 7)
+				moves.push({ x: x + 1, y: y + 1 });
+			if(x - 1 > -1 && y - 1 > -1)
+				moves.push({ x: x - 1, y: y - 1 });
+			if(x + 1 <= 7 && y - 1 > -1)
+				moves.push({ x: x + 1, y: y - 1 });
+			if(x - 1 > -1 && y + 1 <= 7)
+				moves.push({ x: x - 1, y: y + 1 });
+
+			return moves;
+		},
+
+		1: function(x, y, board) { // queen
+
+		},
+
+		2: function(x, y, board) { // rook
+
+		},
+
+		3: function(x, y, board) { // bishop
+
+		},
+
+		4: function(x, y, board) { // knight
+
+		},
+
+		5: function(x, y, board) { // pawn
+
+		}
+	}
 };
 
 Piece.prototype.constructor = Piece;
@@ -66,6 +110,16 @@ Board.prototype = {
 	Validate: function(prevX, prevY, currX, currY) {
 		var FromPiece = this.board[prevX][prevY];
 		var ToPiece = this.board[currX][currY];
+
+		if(FromPiece.Color == ToPiece.Color)
+			return "You can't take a piece of your own color";
+
+
+
+
+		TurnColor = ~TurnColor;
+
+
 
 	},
 	InitializeBoard: function () {
@@ -98,14 +152,15 @@ Board.prototype = {
 
 			}
 			else if(i == 7) {
-				row[0] = new Piece(0,0,PieceEnum.Rook,ColorEnum.White,PieceImgMap[PieceEnum.Rook.toString() + ColorEnum.White.toString()]);
-				row[1] = new Piece(0,1,PieceEnum.Knight,ColorEnum.White,PieceImgMap[PieceEnum.Knight.toString() + ColorEnum.White.toString()]);
-				row[2] = new Piece(0,2,PieceEnum.Bishop,ColorEnum.White,PieceImgMap[PieceEnum.Bishop.toString() + ColorEnum.White.toString()]);
-				row[3] = new Piece(0,3,PieceEnum.Queen,ColorEnum.White,PieceImgMap[PieceEnum.Queen.toString() + ColorEnum.White.toString()]);
-				row[4] = new Piece(0,4,PieceEnum.King,ColorEnum.White,PieceImgMap[PieceEnum.King.toString() + ColorEnum.White.toString()]);
-				row[5] = new Piece(0,5,PieceEnum.Bishop, ColorEnum.White,PieceImgMap[PieceEnum.Bishop.toString() + ColorEnum.White.toString()]);
-				row[6] = new Piece(0,6,PieceEnum.Knight,ColorEnum.White,PieceImgMap[PieceEnum.Knight.toString() + ColorEnum.White.toString()]);
-				row[7] = new Piece(0,7,PieceEnum.Rook, ColorEnum.White,PieceImgMap[PieceEnum.Rook.toString() + ColorEnum.White.toString()]);
+
+				row[0] = new Piece(7,0,PieceEnum.Rook,ColorEnum.White,PieceImgMap[PieceEnum.Rook.toString() + ColorEnum.White.toString()]);
+				row[1] = new Piece(7,1,PieceEnum.Knight,ColorEnum.White,PieceImgMap[PieceEnum.Knight.toString() + ColorEnum.White.toString()]);
+				row[2] = new Piece(7,2,PieceEnum.Bishop,ColorEnum.White,PieceImgMap[PieceEnum.Bishop.toString() + ColorEnum.White.toString()]);
+				row[3] = new Piece(7,3,PieceEnum.Queen,ColorEnum.White,PieceImgMap[PieceEnum.Queen.toString() + ColorEnum.White.toString()]);
+				row[4] = new Piece(7,4,PieceEnum.King,ColorEnum.White,PieceImgMap[PieceEnum.King.toString() + ColorEnum.White.toString()]);
+				row[5] = new Piece(7,5,PieceEnum.Bishop, ColorEnum.White,PieceImgMap[PieceEnum.Bishop.toString() + ColorEnum.White.toString()]);
+				row[6] = new Piece(7,6,PieceEnum.Knight,ColorEnum.White,PieceImgMap[PieceEnum.Knight.toString() + ColorEnum.White.toString()]);
+				row[7] = new Piece(7,7,PieceEnum.Rook, ColorEnum.White,PieceImgMap[PieceEnum.Rook.toString() + ColorEnum.White.toString()]);
 			}
 
 			this.board[i] = row;
