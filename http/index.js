@@ -76,6 +76,7 @@ window.onload = function() {
 	}
 
 	function BindBoard(board) {
+
 		for(var i = 0; i < board.length; i++) {
 
 			for(var j = 0; j < board.length; j++) {
@@ -84,7 +85,7 @@ window.onload = function() {
 				var cell = document.getElementById(i.toString()+j.toString());
 				var a = document.createElement("a");
 
-				if(board[i][i]) 
+				if(board[i][j]) 
 					a.innerHTML = board[i][j].Img;
 
 				a.draggable = true;
@@ -218,7 +219,7 @@ window.onload = function() {
 		else
 			CreateBoard("chess",false);
 
-		console.log(BoardStruct.Board);
+		console.log(BoardStruct.Board.board);
 
 		BindBoard(BoardStruct.Board.board);
 

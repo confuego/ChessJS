@@ -197,7 +197,7 @@ io.on("connection", function(socket) {
 			socket.emit("Recieve Message", { Msg: "It is not your turn", User: "[SERVER]" });
 		}
 		else {
-			Room.Board.Validate(Moves.prevX, Moves.prevY, Moves.currX, Moves.currY);
+			Room.Board.Validate(Number(Moves.prevX), Number(Moves.prevY), Number(Moves.currX), Number(Moves.currY));
 		}
 
 	});

@@ -18,12 +18,16 @@ Room.prototype = {
 
 	SetColors: function() {
 		var PieceColor = Math.round(Math.random() * 1);
-		this.Users[0].Color = PieceColor;
 		
 		if(PieceColor == 0) {
-			this.Users[1].Color = 1;
+
+			this.Users[0].Color = 0;
+			this.Users[1].Color = -1;
 		}
+
 		else {
+
+			this.Users[0].Color = -1;
 			this.Users[1].Color = 0;
 		}
 

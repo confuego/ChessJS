@@ -18,17 +18,17 @@ module.exports.ColorEnum = ColorEnum;
 
 var PieceImgMap = {
 	"00": "&#9819;", // black king
-	"01": "&#9813;", // white king
+	"0-1": "&#9813;", // white king
 	"10": "&#9818;", // black queen 
-	"11": "&#9812;", // white queen 
+	"1-1": "&#9812;", // white queen 
 	"20": "&#9820;", // rook black
-	"21": "&#9814;", // rook white
+	"2-1": "&#9814;", // rook white
 	"30": "&#9821;", // bishop black
-	"31": "&#9815;", // bishop white
+	"3-1": "&#9815;", // bishop white
 	"40": "&#9822;", // knight black
-	"41": "&#9816;", // knight white
+	"4-1": "&#9816;", // knight white
 	"50": "&#9823;", // pawn black
-	"51": "&#9817;", // pawn white
+	"5-1": "&#9817;", // pawn white
 };
 
 module.exports.PieceImgMap = PieceImgMap;
@@ -52,7 +52,7 @@ Piece.prototype  = {
 	MoveCount: undefined,
 	CanMove: function(PrevX, PrevY, CurrX, CurrY, board) {
 
-		var CheckColorOrEmpty = (board[CurrX][CurrY] == undefined || board[CurrX][CurrY].Color == ~this.Color) );
+		var CheckColorOrEmpty = (board[CurrX][CurrY] == undefined || board[CurrX][CurrY].Color == ~this.Color);
 
 		if( ( PrevX > -1 || PrevX <= 7 ) && ( PrevY > -1 || PrevY <= 7 ) ) {
 
@@ -211,19 +211,23 @@ Piece.prototype  = {
 
 		5: function(x, y, board) { // pawn
 			var moves = [];
-
-			if(MoveCount == 0 && x + 2 <= 7 && board[x + 2][y] == undefined)
-				moves.push({ x: x + 2, y: y }); MoveCount = 1;
-			if(x + 1 <= 7 && y + 1 <= 7 && board[x + 1][y + 1].Color == ~this.Color)
+			console.log(x + ", " + y);
+			console.log("MoveCount: " + this.MoveCount);
+			if(this.MoveCount == 0 && x + 2 <= 7 && board[x + 2][y] == undefined) {
+				moves.push({ x: x + 2, y: y }); 
+				this.MoveCount = 1;
+			}
+			if(x + 1 <= 7 && y + 1 <= 7 && board[x + 1][y + 1] && board[x + 1][y + 1].Color == ~this.Color )
 				moves.push({ x: x + 1, y: y + 1 });
-			if(x - 1 >= 0 && y + 1 <= 7 && board[x - 1][y + 1].Color == ~this.Color)
+			if(x - 1 >= 0 && y + 1 <= 7 && board[x - 1][y + 1] && board[x - 1][y + 1].Color == ~this.Color )
 				moves.push({ x: x - 1, y: y + 1 });
-			if(x + 1 <= 7 && board[x + 1][y] == undefined)
+			if(x + 1 <= 7 && board[x][y + 1] == undefined)
 				moves.push({ x: x + 1, y: y });
 
-			if(x + 1 == 7)
+			if(y + 1 == 7)
 				this.Type = PieceEnum.Queen;
 
+			return moves;
 
 		}
 	}
@@ -231,7 +235,7 @@ Piece.prototype  = {
 
 Piece.prototype.constructor = Piece;
 
-module.Piece = Piece;
+module.exports.Piece = Piece;
 
 function Board() {
 	this.InitializeBoard();
@@ -245,13 +249,13 @@ Board.prototype = {
 		var FromPiece = this.board[prevX][prevY];
 		var ToPiece = this.board[currX][currY];
 
-		if(FromPiece.Color == ToPiece.Color)
+		if(ToPiece && FromPiece && FromPiece.Color == ToPiece.Color)
 			return "You can't take a piece of your own color";
 
+		console.log(FromPiece.MoveSet[FromPiece.Type].call(FromPiece, prevX, prevY, this.board));
 
 
-
-		TurnColor = ~TurnColor;
+		this.TurnColor = ~this.TurnColor;
 
 
 
