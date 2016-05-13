@@ -11,7 +11,7 @@ module.exports.PieceEnum = PieceEnum;
 
 var ColorEnum = {
 	Black: 0,
-	White: 1
+	White: -1
 };
 
 module.exports.ColorEnum = ColorEnum;
@@ -39,6 +39,7 @@ function Piece(x,y,type,color,img) {
 	this.Type = type;
 	this.Color = color;
 	this.Img = img;
+	this.MoveCount = 0;
 
 }
 
@@ -48,6 +49,92 @@ Piece.prototype  = {
 	Type: undefined,
 	Color: undefined,
 	Img: undefined,
+	MoveCount: undefined,
+	CanMove: function(PrevX, PrevY, CurrX, CurrY, board) {
+
+		var CheckColorOrEmpty = (board[CurrX][CurrY] == undefined || board[CurrX][CurrY].Color == ~this.Color) );
+
+		if( ( PrevX > -1 || PrevX <= 7 ) && ( PrevY > -1 || PrevY <= 7 ) ) {
+
+			return ( board[PrevX][PrevY] == undefined || ( PrevX == this.x && PrevY == this.y ) ) && CheckColorOrEmpty;
+		}
+
+		return CheckColorOrEmpty;
+	},
+	GetHorizontal: function(x, y, board) {
+
+		var moves = [];
+
+		for(var i = 0; i < x; i++) {
+
+			if(CanMove(i -1, y, i,y,board))
+				moves.push({ x: i, y: y });
+		}
+
+		for(var i = x + 1; i < 8; i++) {
+
+			if(CanMove(i - 1, y, i,y,board))
+				moves.push({ x: i, y: y });	
+		}
+
+		return moves;
+
+	},
+	GetVertical: function(x, y, board) {
+
+		var moves = [];
+
+		for(var i = 0; i < y; i++) {
+			if(CanMove(x, i - 1, x,i,board))
+				moves.push({ x: x, y: i });
+			else break;
+		}
+
+		for(var i = y + 1; i <= 7; i++) {
+			if(CanMove(x, i - 1, x,i,board))
+				moves.push({ x: x, y: i });
+			else break;
+		}
+
+		return moves;
+	},
+	GetDiagonal: function(x, y, board) {
+		var moves = [];
+
+		// above x-axis - bottom to top diagonal
+		for(var i = x + 1, j = y + 1; i <= 7 && j <= 7; i++, j++) {
+
+			if(CanMove(i - 1, j - 1, i, j, board))
+				moves.push({ x: i, y: j });
+			else  break;
+		}
+
+		//below x-axis - bottom to top diagonal
+		for(var i = x - 1, j = y - 1; i >= 0 && j >= 0; i++, j++) {
+
+			if(CanMove(i - 1, j - 1, i, j, board))
+				moves.push({ x: i, y: j });
+			else break;
+		}
+
+		//above x-axis - top to bottom diagonal
+		for(var i = x - 1, j = y + 1; i >= 0 && j <= 7; i++, j++) {
+
+			if(CanMove(i - 1, j - 1, i, j, board))
+				moves.push({ x: i, y: j });
+			else break;
+		}
+
+		//below x-axis - top to bottom diagonal
+		for(var i = x + 1, j = y - 1; i <= 7 && j >= 0; i++, j++) {
+			
+			if(CanMove(i - 1, j - 1, i, j, board))
+				moves.push({ x: i, y: j });
+			else break;
+		}
+
+		return moves;
+	},
 	MoveSet: {
 		0: function(x, y, board) { // king
 
@@ -75,21 +162,68 @@ Piece.prototype  = {
 
 		1: function(x, y, board) { // queen
 
+			var moves = [];
+
+			moves = GetDiagonal(x, y, board);
+
+			moves = moves.concat(GetHorizontal(x, y, board));
+
+			moves = moves.concat(GetVertical(x, y, board));
+
 		},
 
 		2: function(x, y, board) { // rook
+
+			var moves = [];
+
+			moves = GetVertical(x, y, board);
+			moves = moves.concat(GetHorizontal(x, y, board));
+
+			return moves;
 
 		},
 
 		3: function(x, y, board) { // bishop
 
+			return GetDiagonal(x, y, board);
+
 		},
 
 		4: function(x, y, board) { // knight
+			var moves = [];
+
+			if(y + 2 <= 7 && x + 1 <= 7 && CanMove(8, 8, x + 1, y + 2, board))
+				moves.push({ x: x +1, y: y +2 });
+			if(y + 2 <= 7 && x - 1 >= 0 && CanMove(8, 8, x - 1, y + 2, board))
+				moves.push({ x: x - 1, y: y + 2 });
+			if(x - 2 >= 0 && y - 1 >= 0 && CanMove(8, 8, x - 2, y - 1, board))
+				moves.push({ x: x -2, y: y - 1 });
+			if(x + 2 <= 7 && y - 1 >= 0 && CanMove(8, 8,x + 2, y - 1, board))
+				moves.push({ x: x + 2, y: y -1});
+			if(x - 1 >= 0 && y - 2 >= 0 && CanMove(8, 8, x - 1, y - 2, board))
+				moves.push({ x: x - 1, y: y - 2 });
+			if(x + 1 <= 7 && y - 2 >= 0 && CanMove(8, 8, x + 1, y - 2, board))
+				moves.push({ x: x + 1, y: y - 2 });
+
+			return moves;
 
 		},
 
 		5: function(x, y, board) { // pawn
+			var moves = [];
+
+			if(MoveCount == 0 && x + 2 <= 7 && board[x + 2][y] == undefined)
+				moves.push({ x: x + 2, y: y }); MoveCount = 1;
+			if(x + 1 <= 7 && y + 1 <= 7 && board[x + 1][y + 1].Color == ~this.Color)
+				moves.push({ x: x + 1, y: y + 1 });
+			if(x - 1 >= 0 && y + 1 <= 7 && board[x - 1][y + 1].Color == ~this.Color)
+				moves.push({ x: x - 1, y: y + 1 });
+			if(x + 1 <= 7 && board[x + 1][y] == undefined)
+				moves.push({ x: x + 1, y: y });
+
+			if(x + 1 == 7)
+				this.Type = PieceEnum.Queen;
+
 
 		}
 	}
