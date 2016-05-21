@@ -88,17 +88,22 @@ var PieceEnum = {
 		value: 5,
 		moves: function(board) {
 			var moves = [];
+			//console.log(this.x + " , " + this.y);
 			if(this.MoveCount == 0 && this.y + 2 <= 7 && this.GetPiece(this.x, this.y + 2, board) == undefined)
 				moves.push({ x: this.x, y: this.y + 2 }); 
 			if(this.x + 1 <= 7 && this.y + 1 <= 7 && this.GetPiece(this.x + 1, this.y + 1, board) && this.GetPiece(this.x + 1, this.y + 1, board).Color == ~this.Color )
 				moves.push({ x: this.x + 1, y: this.y + 1 });
-			if(this.x + 1 <= 7 && this.y - 1 > -1 && this.GetPiece(this.x + 1, this.y - 1, board) && this.GetPiece(this.x + 1, this.y - 1, board).Color == ~this.Color )
-				moves.push({ x: this.x + 1, y: this.y - 1 });
+			if(this.x - 1 <= 7 && this.y + 1 > -1 && this.GetPiece(this.x - 1, this.y + 1, board) && this.GetPiece(this.x - 1, this.y + 1, board).Color == ~this.Color )
+				moves.push({ x: this.x - 1, y: this.y + 1 });
 			if(this.y + 1 <= 7 && this.GetPiece(this.x, this.y + 1, board) == undefined)
 				moves.push({ x: this.x, y: this.y + 1 });
 
-			if(this.x + 1 == 7)
-				this.Type = PieceEnum.Queen;
+			if(this.x + 1 == 7) {
+
+				this.Type = PieceEnum.Queen.value;
+				this.typeObj = PieceEnum.Queen;
+				this.Moves = PieceEnum.moves;
+			}
 
 			this.MoveCount = 1;
 
@@ -143,6 +148,7 @@ function Piece(x, y, type, color, img) {
 	this.Color = color;
 	this.Img = img;
 	this.MoveCount = 0;
+	this.typeObj = type;
 
 }
 
@@ -154,6 +160,7 @@ Piece.prototype  = {
 	Img: undefined,
 	MoveCount: undefined,
 	Moves: undefined,
+	typeObj: undefined,
 	CanMove: function(PrevX, PrevY, CurrX, CurrY, board) {
 
 		var CheckColorOrEmpty = ( this.GetPiece(CurrX, CurrY, board) == undefined || this.GetPiece(CurrX, CurrY, board).Color == ~this.Color );
@@ -263,13 +270,21 @@ Board.prototype = {
 		for(var i = 0; i < this.board.length; i++) {
 
 			var opposite_index = this.board.length - i - 1;
-			flipped[i] = this.board[opposite_index];
+			var opposite = this.board[opposite_index];
 
-			flipped[i].forEach( function(d) {
-				d.y = i;
-			});
+			flipped[i] = new Array(8);
+			for(var j = 0; j < 8; j++) {
+				var piece = opposite[j];
+
+				if(piece) {
+
+					flipped[i][j] = new Piece(piece.x, piece.y, piece.typeObj, piece.Color, piece.Img);
+					flipped[i][j].MoveCount = piece.MoveCount;
+				}
+				else
+					flipped[i][j] = undefined;
+			}
 		}
-
 		return flipped;
 	},
 	CheckMoves: function(moves, x , y) {
@@ -280,20 +295,6 @@ Board.prototype = {
 		return false;
 
 	},
-	PrintBoard: function(board) {
-		for(var i = 0; i < board.length; i++) {
-			var color = [];
-
-			for(var j = 0; j < board.length; j++ ) {
-				if(board[i][j]) color.push(board[i][j].Color);
-				else color.push("Empty");
-			}
-
-			console.log(color);
-
-		}
-		console.log("\n");
-	}, 
 	Validate: function(prevRow, prevCol, currRow, currCol) {
 		var board = undefined;
 		var FromPiece = this.board[prevRow][prevCol];
@@ -306,8 +307,8 @@ Board.prototype = {
 			return "You can't take a piece of your own color";
 
 		if(FromPiece.Color == ColorEnum.White) {
-
 			board = this.FlipBoard();
+			FromPiece = board[prevRow][prevCol];
 			row = this.board.length - currRow - 1;
 		}
 		else {

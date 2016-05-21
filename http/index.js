@@ -1,7 +1,7 @@
 
 window.onload = function() {
 
-	var socket = io.connect("http://10.0.226.89:8080", { resource: "nodejs" });
+	var socket = io.connect("http://localhost:8080", { resource: "nodejs" });
 	var CurrentRoom = null;
 	var CurrentColor = null;
 	var ColorEnum = null;
@@ -93,9 +93,8 @@ window.onload = function() {
 				a.addEventListener("dragstart", function(e) {
 
 					var coords = e.currentTarget.parentNode.id.split("");
-					prevX = coords[0];
-					prevY = coords[1];
-					//console.log(prevX + "-" + prevY);
+					prevRow = coords[0];
+					prevCol = coords[1];
 				}, false);
 
 				a.addEventListener("dragover",function(e) {
@@ -107,15 +106,15 @@ window.onload = function() {
 					e.preventDefault();
 					var coords = e.toElement.parentNode.id.split("");
 
-					currX = coords[0];
-					currY = coords[1];
+					currRow = coords[0];
+					currCol = coords[1];
 					// socket emit event to check board
 					// on return, call this logic if valid move
 					//var from = document.getElementById(prevX.toString() + prevY.toString());
 					//var piece = from.firstChild.innerHTML;
 					//e.toElement.innerHTML = piece;
 					//ClearChildren(from.firstChild);
-					socket.emit("Validate Move", { prevX: prevX, prevY: prevY, currX: currX, currY: currY, RoomName: CurrentRoom });
+					socket.emit("Validate Move", { prevRow: prevRow, prevCol: prevCol, currRow: currRow, currCol: currCol, RoomName: CurrentRoom });
 					
 
 				}, false);
@@ -206,7 +205,6 @@ window.onload = function() {
 		CurrentColor = ColorStruct.Color;
 		ColorEnum = ColorStruct.ColorEnum;
 		AddChatMessage(ColorStruct.Msg, ColorStruct.User + ": ", document.getElementById("ChatArea"));
-
 	});
 
 	socket.on("Initialize Board", function(BoardStruct) {
@@ -222,7 +220,6 @@ window.onload = function() {
 		console.log(BoardStruct.Board.board);
 
 		BindBoard(BoardStruct.Board.board);
-
 	});
 };
 

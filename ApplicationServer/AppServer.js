@@ -190,14 +190,14 @@ io.on("connection", function(socket) {
 		if(Room.Users.indexOf(user) < -1) {
 			socket.emit("Recieve Message", { Msg: "User is not in this room", User: "[SERVER]" });
 		}
-		else if(Room.Board.board[Moves.prevX][Moves.prevY].Color != user.Color) {
+		else if(Room.Board.board[Moves.prevRow][Moves.prevCol].Color != user.Color) {
 			socket.emit("Recieve Message", { Msg: "That is not your color", User: "[SERVER]" });
 		}
 		else if(Room.Board.TurnColor != user.Color) {
 			socket.emit("Recieve Message", { Msg: "It is not your turn", User: "[SERVER]" });
 		}
 		else {
-			Room.Board.Validate(Number(Moves.prevX), Number(Moves.prevY), Number(Moves.currX), Number(Moves.currY));
+			Room.Board.Validate(Number(Moves.prevRow), Number(Moves.prevCol), Number(Moves.currRow), Number(Moves.currCol));
 		}
 
 	});
