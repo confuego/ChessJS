@@ -186,6 +186,9 @@ io.on("connection", function(socket) {
 		if(Room.Users.indexOf(user) < -1) {
 			socket.emit("Recieve Message", { Msg: "User is not in this room", User: "[SERVER]" });
 		}
+		else if(!Room.Board) {
+			socket.emit("Recieve Message", { Msg: "There is no board for this room.", User: "[SERVER]" });
+		}
 		else if(!Room.Board.board[Moves.prevRow][Moves.prevCol]) {
 			socket.emit("Recieve Message", { Msg: "Not a valid coordinate", User: "[SERVER]"});
 		}
@@ -202,10 +205,23 @@ io.on("connection", function(socket) {
 				socket.emit("Recieve Message", { Msg: valid, User: "[SERVER]" });
 			}
 			else {
-				SendMessage({ Socket: this, Room: RoomName, Events: 
-													[
-														{ EventType: "Update Board", Data: { Msg: "Initializing Board ", User: "[SERVER]", Board: Room.Board, PieceEnum: BoardNameSpace.PieceEnum } } 
-													] 
+				SendMessage
+				({ 
+					Socket: this,
+					Room: RoomName, 
+					Events: 
+						[
+							{ 
+								EventType: "Update Board",
+								Data: 
+									{ 
+										Msg: "Initializing Board ", 
+										User: "[SERVER]", 
+										Board: Room.Board, 
+										PieceEnum: BoardNameSpace.PieceEnum 
+									} 
+							} 
+						] 
 				});
 			}
 

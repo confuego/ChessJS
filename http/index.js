@@ -10,6 +10,7 @@ window.onload = function() {
 	var prevY = null;
 	var currX = null;
 	var currY = null;
+	var Events = ["drag", "dragstart", "dragover", "drop", "dragenter"];
 
 	document.getElementById("UserName").focus();
 
@@ -24,8 +25,13 @@ window.onload = function() {
 				var row = document.createElement("tr");
 
 				for(var j = 7; j >= 0; j--) {
+
 					var cell = document.createElement("td");
 					cell.id = i.toString() + j.toString();
+
+					var piece = createPiece(i, j, cell);
+					cell.appendChild(piece);
+
 					row.appendChild(cell);
 				}
 				table.appendChild(row);
@@ -39,8 +45,13 @@ window.onload = function() {
 				var row = document.createElement("tr");
 
 				for(var j = 0; j < 8; j++) {
+
 					var cell = document.createElement("td");
 					cell.id = i.toString() + j.toString();
+
+					var piece = createPiece(i, j, cell);
+					cell.appendChild(piece);
+
 					row.appendChild(cell);
 				}
 				table.appendChild(row);
@@ -60,7 +71,7 @@ window.onload = function() {
 		}
 	}
 
-	function AddChatMessage(Msg,User,messagelist) {
+	function AddChatMessage(Msg, User, messagelist) {
 		var li = document.createElement("li");
 
 		var span = document.createElement("span");
@@ -74,23 +85,11 @@ window.onload = function() {
 		messagelist.appendChild(li);
 	}
 
-	function createPiece(i, j, board, cell) {
-		var a;
+	function createPiece(i, j, cell) {
 
-		if(cell.innerHTML == "") 
-			a = document.createElement("a");
-		else
-			a = cell.firstChild;
+		var a = document.createElement("a");
 
-		if(board[i][j]) {
-			//remove old listeners and add new ones
-			a.innerHTML = board[i][j].Img;
-			a.draggable = true;
-		}
-		else {
-			ClearChildren(a);
-			a.draggable = false;
-		}
+		a.draggable = true;
 
 		a.addEventListener("dragenter", function(e) {
 			e.preventDefault();
@@ -107,19 +106,28 @@ window.onload = function() {
 		}, false);
 
 		a.addEventListener("drop", function(e) {
-			console.log(e.srcElement.parentNode);
+
 			e.preventDefault();
 			var coords = e.toElement.parentNode.id.split("");
 
 			currRow = coords[0];
 			currCol = coords[1];
 			socket.emit("Validate Move", { prevRow: prevRow, prevCol: prevCol, currRow: currRow, currCol: currCol, RoomName: CurrentRoom });
-			
 
 		}, false);
 
-		//cell.appendChild(a);
 		return a;
+	}
+
+	function updatePiece(i, j, cell, board) {
+		var piece = board[i][j];
+
+		if(piece) {
+			cell.innerHTML = piece.Img;
+		}
+		else {
+			cell.innerHTML = "";
+		}
 	}
 
 	function BindBoard(board) {
@@ -130,8 +138,8 @@ window.onload = function() {
 
 
 				var cell = document.getElementById(i.toString() + j.toString());
-
-				cell.appendChild(createPiece(i, j, board, cell));
+				updatePiece(i, j, cell.firstChild, board);
+				//cell.firstChild.appendChild(piece);
 
 
 			}
@@ -218,10 +226,7 @@ window.onload = function() {
 	});
 
 	socket.on("Update Board", function(BoardStruct) {
-		//check color
-		//bind board to screen and flip based on color.
 		PieceEnum = BoardStruct.PieceEnum;
-		//AddChatMessage(BoardStruct.Msg, BoardStruct.User + ": ", document.getElementById("ChatArea"));
 		if(document.getElementById("chess_board") == null) {
 			if(CurrentColor == ColorEnum.Black)
 				CreateBoard("chess",true);

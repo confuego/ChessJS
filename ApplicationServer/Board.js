@@ -328,8 +328,8 @@ Board.prototype = {
 
 		console.log(valid);
 
-
-		this.UpdateBoard(prevRow, prevCol, currRow, currCol);
+		if(valid)
+			this.UpdateBoard(prevRow, prevCol, currRow, currCol);
 
 		this.TurnColor = ~this.TurnColor;
 
