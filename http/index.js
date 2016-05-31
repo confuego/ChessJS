@@ -53,7 +53,6 @@ window.onload = function() {
 		document.getElementById(div).appendChild(table);
 	}
 
-
 	function ClearChildren(Node) {
 
 		while (Node.firstChild) {
@@ -75,6 +74,54 @@ window.onload = function() {
 		messagelist.appendChild(li);
 	}
 
+	function createPiece(i, j, board, cell) {
+		var a;
+
+		if(cell.innerHTML == "") 
+			a = document.createElement("a");
+		else
+			a = cell.firstChild;
+
+		if(board[i][j]) {
+			//remove old listeners and add new ones
+			a.innerHTML = board[i][j].Img;
+			a.draggable = true;
+		}
+		else {
+			ClearChildren(a);
+			a.draggable = false;
+		}
+
+		a.addEventListener("dragenter", function(e) {
+			e.preventDefault();
+		});
+
+		a.addEventListener("dragstart", function(e) {
+			var coords = e.currentTarget.parentNode.id.split("");
+			prevRow = coords[0];
+			prevCol = coords[1];
+		}, false);
+
+		a.addEventListener("dragover", function(e) {
+			e.preventDefault();
+		}, false);
+
+		a.addEventListener("drop", function(e) {
+			console.log(e.srcElement.parentNode);
+			e.preventDefault();
+			var coords = e.toElement.parentNode.id.split("");
+
+			currRow = coords[0];
+			currCol = coords[1];
+			socket.emit("Validate Move", { prevRow: prevRow, prevCol: prevCol, currRow: currRow, currCol: currCol, RoomName: CurrentRoom });
+			
+
+		}, false);
+
+		//cell.appendChild(a);
+		return a;
+	}
+
 	function BindBoard(board) {
 
 		for(var i = 0; i < board.length; i++) {
@@ -82,44 +129,10 @@ window.onload = function() {
 			for(var j = 0; j < board.length; j++) {
 
 
-				var cell = document.getElementById(i.toString()+j.toString());
-				var a = document.createElement("a");
+				var cell = document.getElementById(i.toString() + j.toString());
 
-				if(board[i][j]) 
-					a.innerHTML = board[i][j].Img;
+				cell.appendChild(createPiece(i, j, board, cell));
 
-				a.draggable = true;
-
-				a.addEventListener("dragstart", function(e) {
-
-					var coords = e.currentTarget.parentNode.id.split("");
-					prevRow = coords[0];
-					prevCol = coords[1];
-				}, false);
-
-				a.addEventListener("dragover",function(e) {
-					e.preventDefault();
-				}, false);
-
-				a.addEventListener("drop",function(e) {
-
-					e.preventDefault();
-					var coords = e.toElement.parentNode.id.split("");
-
-					currRow = coords[0];
-					currCol = coords[1];
-					// socket emit event to check board
-					// on return, call this logic if valid move
-					//var from = document.getElementById(prevX.toString() + prevY.toString());
-					//var piece = from.firstChild.innerHTML;
-					//e.toElement.innerHTML = piece;
-					//ClearChildren(from.firstChild);
-					socket.emit("Validate Move", { prevRow: prevRow, prevCol: prevCol, currRow: currRow, currCol: currCol, RoomName: CurrentRoom });
-					
-
-				}, false);
-
-				cell.appendChild(a);
 
 			}
 
@@ -164,7 +177,6 @@ window.onload = function() {
 				document.getElementById("CommunicationDiv").style.visibility = "visible";
 			}
 		}
-
 	});
 
 	socket.on("RefreshRooms", function(RoomMap) {
@@ -184,7 +196,6 @@ window.onload = function() {
 
 			RoomList.appendChild(li);
 		}
-
 	});
 
 	document.getElementById("TypeArea").addEventListener("keydown", function(e) {
@@ -193,7 +204,6 @@ window.onload = function() {
 			socket.emit("Send Message", { Message: input.value, Room: CurrentRoom });
 			input.value = null;
 		}
-
 	});
 
 	socket.on("Recieve Message", function(MsgStruct) {
@@ -207,20 +217,18 @@ window.onload = function() {
 		AddChatMessage(ColorStruct.Msg, ColorStruct.User + ": ", document.getElementById("ChatArea"));
 	});
 
-	socket.on("Initialize Board", function(BoardStruct) {
+	socket.on("Update Board", function(BoardStruct) {
 		//check color
 		//bind board to screen and flip based on color.
 		PieceEnum = BoardStruct.PieceEnum;
-		AddChatMessage(BoardStruct.Msg, BoardStruct.User + ": ", document.getElementById("ChatArea"));
-		if(CurrentColor == ColorEnum.Black)
-			CreateBoard("chess",true);
-		else
-			CreateBoard("chess",false);
-
-		console.log(BoardStruct.Board.board);
+		//AddChatMessage(BoardStruct.Msg, BoardStruct.User + ": ", document.getElementById("ChatArea"));
+		if(document.getElementById("chess_board") == null) {
+			if(CurrentColor == ColorEnum.Black)
+				CreateBoard("chess",true);
+			else
+				CreateBoard("chess",false);
+		}
 
 		BindBoard(BoardStruct.Board.board);
 	});
 };
-
-

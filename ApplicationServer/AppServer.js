@@ -72,7 +72,6 @@ io.on("connection", function(socket) {
 		}
 	}
 
-
 	socket.on("disconnect", function() {
 		var user = SocketMap[this.id];
 		RemoveUserFromRoom(user);
@@ -104,7 +103,6 @@ io.on("connection", function(socket) {
 		else if(RoomNumber >= MAX_ROOMS) {
 			this.emit("Recieve Message", { Msg: "Maximum number of rooms has been reached", User: "[SERVER]" });
 		}
-
 	});
 
 	socket.on("Join Room", function(RoomName) {
@@ -144,7 +142,7 @@ io.on("connection", function(socket) {
 
 					SendMessage({ Socket: this, Room: RoomName, Events: 
 																		[
-																			{ EventType: "Initialize Board", Data: { Msg: "Initializing Board ", User: "[SERVER]", Board: Room.Board, PieceEnum: BoardNameSpace.PieceEnum } } 
+																			{ EventType: "Update Board", Data: { Msg: "Initializing Board ", User: "[SERVER]", Board: Room.Board, PieceEnum: BoardNameSpace.PieceEnum } } 
 																		] 
 								});
 
@@ -155,7 +153,6 @@ io.on("connection", function(socket) {
 		else {
 			socket.emit("Recieve Message", { Msg: RoomName + " does not exist", User: "[SERVER]" });
 		}
-
 	});
 
 	socket.on("Create User", function(username) {
@@ -168,7 +165,6 @@ io.on("connection", function(socket) {
 		else {
 			socket.emit("Recieve Message", { Msg: "User already exists on this connection", User: "[SERVER]" });
 		}
-
 	});
 
 	socket.on("Send Message", function(MessageStruct) {
@@ -190,6 +186,9 @@ io.on("connection", function(socket) {
 		if(Room.Users.indexOf(user) < -1) {
 			socket.emit("Recieve Message", { Msg: "User is not in this room", User: "[SERVER]" });
 		}
+		else if(!Room.Board.board[Moves.prevRow][Moves.prevCol]) {
+			socket.emit("Recieve Message", { Msg: "Not a valid coordinate", User: "[SERVER]"});
+		}
 		else if(Room.Board.board[Moves.prevRow][Moves.prevCol].Color != user.Color) {
 			socket.emit("Recieve Message", { Msg: "That is not your color", User: "[SERVER]" });
 		}
@@ -197,9 +196,20 @@ io.on("connection", function(socket) {
 			socket.emit("Recieve Message", { Msg: "It is not your turn", User: "[SERVER]" });
 		}
 		else {
-			Room.Board.Validate(Number(Moves.prevRow), Number(Moves.prevCol), Number(Moves.currRow), Number(Moves.currCol));
-		}
+			var valid = Room.Board.Validate(Number(Moves.prevRow), Number(Moves.prevCol), Number(Moves.currRow), Number(Moves.currCol));
 
+			if(typeof valid == "string") {
+				socket.emit("Recieve Message", { Msg: valid, User: "[SERVER]" });
+			}
+			else {
+				SendMessage({ Socket: this, Room: RoomName, Events: 
+													[
+														{ EventType: "Update Board", Data: { Msg: "Initializing Board ", User: "[SERVER]", Board: Room.Board, PieceEnum: BoardNameSpace.PieceEnum } } 
+													] 
+				});
+			}
+
+		}
 	});
 
 

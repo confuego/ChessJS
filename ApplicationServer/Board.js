@@ -149,7 +149,6 @@ function Piece(x, y, type, color, img) {
 	this.Img = img;
 	this.MoveCount = 0;
 	this.typeObj = type;
-
 }
 
 Piece.prototype  = {
@@ -293,7 +292,12 @@ Board.prototype = {
 				return true;
 		}
 		return false;
+	},
+	UpdateBoard: function(before_row, before_col, after_row, after_col) {
+		var piece = this.board[before_row][before_col];
+		this.board[before_row][before_col] = null;
 
+		this.board[after_row][after_col] = piece;
 	},
 	Validate: function(prevRow, prevCol, currRow, currCol) {
 		var board = undefined;
@@ -323,10 +327,13 @@ Board.prototype = {
 		valid = this.CheckMoves(moves, currCol, row);
 
 		console.log(valid);
+
+
+		this.UpdateBoard(prevRow, prevCol, currRow, currCol);
+
 		this.TurnColor = ~this.TurnColor;
 
-
-
+		return true;
 	},
 	InitializeBoard: function () {
 		this.board = new Array(8);
